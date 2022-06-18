@@ -1,9 +1,22 @@
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.validators import (MaxValueValidator)
 from django.db import models
 
 
-class User
+class User(AbstractUser):
+    bio = models.TextField(
+        blank=True,
+        verbose_name='Биография'
+    )
+    password = models.CharField(max_length=100, blank=True)
+    ROLES = (
+        ('user', 'user'),
+        ('moderator', 'moderator'),
+        ('admin', 'admin'),
+    )
+    role = models.CharField(max_length=50, choices=ROLES,
+                            null=True, default='User')
 
 
 class Category(models.Model):
@@ -82,7 +95,7 @@ class Title(models.Model):
         return self.name
 
 
-class Review
+# class Review
 
 
-class Comment
+# class Comment
