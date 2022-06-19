@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reviews.models import User,Comment, Review
+from reviews.models import User, Category, Comment, Review, Genre, Title
 from rest_framework.validators import UniqueTogetherValidator
 
 
@@ -136,3 +136,46 @@ class EditUsersSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role',)
+
+class GenreSerializer(serializers.ModelSerializer):
+    """Сериалазер для модели Genre."""
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    """Сериалазер для модели Category."""
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    """Сериалазер для модели Title."""
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = serializers.IntegerField()
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        read_only_fields = fields
+
+
+class TitleCreate(serializers.ModelSerializer):
+    """Сериалазер для модели Title."""
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
