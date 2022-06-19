@@ -105,3 +105,64 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+class Review(models.Model):
+    text = models.TextField(
+        verbose_name='Текст отзыва',
+    )
+    score = models.IntegerField(
+        verbose_name='Оценка',
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации',
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Название произведения',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор отзыва',
+    )
+
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        unique_together = [['title', 'author']]
+
+    def __str__(self):
+        return self.text
+
+
+class Comment(models.Model):
+    text = models.TextField(
+        verbose_name='Текст комментария',
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации',
+    )
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+    )
+
+    class Meta:
+        verbose_name = 'Комментрарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text
