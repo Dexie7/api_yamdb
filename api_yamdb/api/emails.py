@@ -9,5 +9,5 @@ def send_email_confirmation(user):
         f"{create_confirmation_code(user)}",
         from_email=None,
         fail_silently=False,
-        recipient_list=['romasan888888@gmail.com']
+        recipient_list=[user.email]
     )

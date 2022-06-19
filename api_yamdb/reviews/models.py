@@ -10,13 +10,25 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     password = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True, unique=True, verbose_name="email")
     ROLES = (
         ('user', 'user'),
         ('moderator', 'moderator'),
         ('admin', 'admin'),
     )
     role = models.CharField(max_length=50, choices=ROLES,
-                            null=True, default='User')
+                            null=True, default='user', verbose_name='Роль')
+
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+        ordering = ['-id']
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name="unique_follow")
+        ]
 
 
 class Category(models.Model):
@@ -93,9 +105,3 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-# class Review
-
-
-# class Comment
