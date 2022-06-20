@@ -26,7 +26,7 @@ from .serializers import (
 
 )
 from .filter import TitlesFilter
-from reviews.models import User, Category, Genre, Title, Review
+from reviews.models import User, Category, Genre, Title, Review, Comment
 from .emails import send_email_confirmation
 from .tokens import check_confirmation_code, create_token_for_user
 from .permissions import IsAdminOrReadOnly, IsAdminUserCustom, ReadOnlyOrIsAdminOrModeratorOrAuthor
@@ -173,25 +173,40 @@ class ReviewViewSet(BaseReviewCommentView):
     """Viewset для модели  Review."""
     serializer_class = ReviewSerializer
 
-    def get_title(self):
-        return get_object_or_404(Title, id=self.kwargs.get("title_id"))
+    def create(self, request, *args, **kwargs):
+        
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        if Review.objects.filter(title=title, author=self.request.user).exists():
+            return Response('Вы уже оставили отзыв!', status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED,
+                        headers=headers)
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        title_id = self.kwargs.get("title_id")
+        return Review.objects.filter(title=title_id)
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(BaseReviewCommentView):
     """Viewset для модели  Comment."""
     serializer_class = CommentSerializer
 
-    def get_review(self):
-        return get_object_or_404(Review, id=self.kwargs.get("reviews"))
-
     def get_queryset(self):
-        return self.get_review().reviews.all()
+        review_id = self.kwargs.get("review_id")
+        return Comment.objects.filter(review=review_id)
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, review=self.get_review())
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, pk=review_id)
+        serializer.save(author=self.request.user, review=review)
