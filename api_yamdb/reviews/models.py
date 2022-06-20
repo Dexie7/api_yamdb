@@ -192,4 +192,3 @@ class Comment(BaseReviewComment):
         ordering = ['review']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-
