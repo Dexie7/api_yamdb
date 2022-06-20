@@ -1,18 +1,42 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title, User
+from .models import Category, Comment, Genre, Review, Title, User
 
 
+@admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'username', 'role',)
-    search_fields = ('username',)
-    list_filter = ('username',)
+    list_display = ('username', 'role', )
+    search_fields = ('usernamename',)
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Category)
-# admin.site.register(Comment)
-admin.site.register(Genre)
-# admin.site.register(Review)
-admin.site.register(Title)
-admin.site.register(User, UserAdmin)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'name', )
+    search_fields = ('name',)
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Genre)
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    empty_value_display = '-пусто-'
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(Title)
+class TitleAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('title_id', 'author', 'pub_date')
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('review_id', 'author', 'pub_date')
+    empty_value_display = '-пусто-'

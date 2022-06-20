@@ -1,20 +1,22 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CreateUserViewSet, AdminUserViewSet, CurrentUserView,
-                    UsersViewSet, get_token, CommentViewSet, ReviewViewSet,
-                    TitleViewSet, GenreViewSet, CategoryViewSet)
+from .views import (
+    APISignup,
+    CategoryViewSet,
+    CommentViewSet,
+    CreateToken,
+    GenreViewSet,
+    MeAPIView,
+    ReviewViewSet,
+    TitleViewSet,
+    UserViewSet
+)
 
+app_name = 'api'
 
 router_v1 = DefaultRouter()
-router_v1.register(
-    r'(?P<version>v1)/titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
-)
-router_v1.register(
-    r'(?P<version>v1)/titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    CommentViewSet,
-    basename='comments',
-)
+
 router_v1.register(
     prefix=r'(?P<version>v1)/categories',
     viewset=CategoryViewSet,
@@ -30,21 +32,42 @@ router_v1.register(
     viewset=TitleViewSet,
     basename='titles',
 )
+router_v1.register(
+    prefix=r'(?P<version>v1)/titles/(?P<title_id>\d+)/reviews',
+    viewset=ReviewViewSet,
+    basename='reviews',
+)
+router_v1.register(
+    prefix=(r'(?P<version>v1)/titles/(?P<title_id>\d+)/'
+            r'reviews/(?P<reviews>\d+)/comments'),
+    viewset=CommentViewSet,
+    basename='comments',
+)
+router_v1.register(
+    prefix=r'(?P<version>v1)/users',
+    viewset=UserViewSet,
+    basename='users',
+)
 
-router_v1_auth = DefaultRouter()
-router_v1_auth.register('signup', CreateUserViewSet, basename='signup')
-
-router_v1_users = DefaultRouter()
-router_v1_users.register('users', UsersViewSet, basename='users')
-router_v1_users.register(r'users(\b(?!/me)\b)',
-                         AdminUserViewSet,
-                         basename='users-edit')
-
+token_auth_urls = [
+    path(
+        'auth/token/',
+        CreateToken.as_view(),
+        name='token_obtain_pair'
+    ),
+    path(
+        'auth/signup/',
+        APISignup.as_view(),
+        name='signup'
+    ),
+]
 
 urlpatterns = [
+    re_path(
+        r'(?P<version>v1)/users/me',
+        MeAPIView.as_view(),
+        name='users-me'
+    ),
     path('', include(router_v1.urls)),
-    path('v1/', include(router_v1_users.urls)),
-    path('v1/auth/', include(router_v1_auth.urls)),
-    path('v1/auth/token/', get_token),
-    path('v1/users/me/', CurrentUserView.as_view())
+    path('v1/', include(token_auth_urls))
 ]
