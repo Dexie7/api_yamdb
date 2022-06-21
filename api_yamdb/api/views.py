@@ -35,44 +35,33 @@ class FirstVersioning(URLPathVersioning):
     allowed_versions = 'v1'
 
 
-class APISignup(views.APIView):
+class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """View для регистрации и создания пользователя
     с последующей отсылкой confirmation code на email этого пользователя."""
 
     permission_classes = (permissions.AllowAny,)
+    queryset = User.objects.all()
+    serializer_class = SignupSerializer
 
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK,
+                        headers=headers)
 
-        username_exists = User.objects.filter(username=username).exists()
-        email_exists = User.objects.filter(email=email).exists()
-
-        if not username_exists and not email_exists:
-            user = User.objects.create(username=username, email=email)
-        else:
-            if not username_exists:
-                return Response(
-                    "Ошибка, email занят, просьба выбрать другой email.",
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user = get_object_or_404(User, username=username)
-            if user.email != email:
-                return Response(
-                    "Ошибка, у пользователя другой email.",
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        token = default_token_generator.make_token(user)
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        token = default_token_generator.make_token(instance)
         send_mail(
             subject='Ваш код для получения api-токена.',
             message=f'Код: {token}',
             from_email=FROM_EMAIL,
-            recipient_list=[user.email],
+            recipient_list=[instance.email],
             fail_silently=False,
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateToken(views.APIView):
