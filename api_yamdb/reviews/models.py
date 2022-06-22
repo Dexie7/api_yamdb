@@ -72,9 +72,6 @@ class User(AbstractUser):
             or self.is_staff
         )
 
-    def str(self):
-        return self.username
-
 
 class BaseCategoryGenre(models.Model):
     """Базовый класс для категорий и жанров."""
@@ -154,7 +151,6 @@ class BaseReviewComment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='%(class)ss'
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
@@ -163,10 +159,8 @@ class BaseReviewComment(models.Model):
     )
 
     class Meta:
+        ordering = ['-pub_date']
         abstract = True
-
-    def str(self):
-        return self.text[:20]
 
 
 class Review(BaseReviewComment):
@@ -175,7 +169,7 @@ class Review(BaseReviewComment):
         Title,
         on_delete=models.CASCADE,
         related_name='reviews')
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
             MaxValueValidator(10),
             MinValueValidator(1)
@@ -184,6 +178,7 @@ class Review(BaseReviewComment):
     )
 
     class Meta:
+        default_related_name = '%(app_label)s_%(class)ss'
         ordering = ['title']
         constraints = [
             models.UniqueConstraint(
@@ -204,6 +199,6 @@ class Comment(BaseReviewComment):
     )
 
     class Meta:
-        ordering = ['review']
+        default_related_name = '%(app_label)s_%(class)ss'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
