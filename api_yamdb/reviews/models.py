@@ -72,9 +72,6 @@ class User(AbstractUser):
             or self.is_staff
         )
 
-    def str(self):
-        return self.username
-
 
 class BaseCategoryGenre(models.Model):
     """Базовый класс для категорий и жанров."""
