@@ -5,7 +5,7 @@ from django.core.validators import (MaxValueValidator,
                                     )
 from django.db import models
 
-from datetime import datetime as dt
+import datetime as dt
 from collections import namedtuple
 
 
@@ -90,9 +90,6 @@ class BaseCategoryGenre(models.Model):
         abstract = True
         ordering = ['name']
 
-    def str(self):
-        return self.name[:20]
-
 
 class Category(BaseCategoryGenre):
     """Категории произведений."""
@@ -113,16 +110,14 @@ class Genre(BaseCategoryGenre):
 class Title(models.Model):
     """Произведения, к которым пишут отзывы (Review)."""
     name = models.CharField(
-        max_length=256,
+        max_length=200,
         verbose_name='Произведение'
     )
     year = models.IntegerField(
-        validators=(
-            MaxValueValidator(
-                limit_value=dt.now().year,
-                message='Недопустимы невышедшие произведения'),
-        ),
-        verbose_name='Год создания произведения'
+        validators=[
+            MaxValueValidator(dt.date.today().year)
+        ],
+        verbose_name='год создания произведения'
     )
     genre = models.ManyToManyField(
         Genre,
@@ -141,9 +136,6 @@ class Title(models.Model):
         ordering = ['name']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-
-    def str(self):
-        return self.name
 
 
 class BaseReviewComment(models.Model):
