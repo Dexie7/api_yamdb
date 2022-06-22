@@ -162,7 +162,6 @@ class BaseReviewComment(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
         abstract = True
 
 
@@ -182,7 +181,7 @@ class Review(BaseReviewComment):
 
     class Meta:
         default_related_name = '%(app_label)s_%(class)ss'
-        ordering = ['title']
+        ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -202,6 +201,7 @@ class Comment(BaseReviewComment):
     )
 
     class Meta:
+        ordering = ['-pub_date']
         default_related_name = '%(app_label)s_%(class)ss'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
