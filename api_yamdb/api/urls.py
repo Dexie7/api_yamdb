@@ -2,7 +2,7 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    APISignup,
+    CreateUserViewSet,
     CategoryViewSet,
     CommentViewSet,
     CreateToken,
@@ -49,17 +49,17 @@ router_v1.register(
     basename='users',
 )
 
+router_v1.register(
+    prefix=r'(?P<version>v1)/auth/signup',
+    viewset=CreateUserViewSet,
+    basename='auth/signup',)
+
 token_auth_urls = [
     path(
         'auth/token/',
         CreateToken.as_view(),
         name='token_obtain_pair'
-    ),
-    path(
-        'auth/signup/',
-        APISignup.as_view(),
-        name='signup'
-    ),
+    )
 ]
 
 urlpatterns = [

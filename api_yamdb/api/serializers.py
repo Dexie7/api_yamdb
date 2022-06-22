@@ -1,4 +1,7 @@
+from django.conf import settings
+
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import (
     Category,
@@ -6,14 +9,13 @@ from reviews.models import (
     Genre,
     Review,
     Title,
-    User,
-    ROLE_CHOICES
+    User
 )
 
 
 REVIEW_ERROR_MESSAGE = "Уже есть ревью на это произведение."
 SIGNUP_ERROR_MESSAGE = 'Ошибка, имя me зарезервировано системой.'
-USERNAME_REGEX = r'^[\w.@+-]+$'
+USERNAME_REGEX = r'^(?!me+$)[\w.@+-]+$'
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,28 +27,60 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-
-class RestrictedUserRoleSerializer(UserSerializer):
-    """Сериалазер для модели User, ендпоинта users/me, роль user."""
-    role = serializers.ChoiceField(ROLE_CHOICES, read_only=True)
-
-
-class SignupSerializer(serializers.Serializer):
-    """Сериалазер без модели, для полей username и email."""
-    username = serializers.RegexField(
-        regex=USERNAME_REGEX, max_length=150)
-    email = serializers.EmailField()
-
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(SIGNUP_ERROR_MESSAGE)
         return value
 
 
+class RestrictedUserRoleSerializer(UserSerializer):
+    """Сериалазер для модели User, ендпоинта users/me, роль user."""
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+        read_only_fields = ('role',)
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    """Сериалазер без модели, для полей username и email."""
+    email = serializers.EmailField(max_length=settings.EMAIL_LENGTH,)
+
+    class Meta:
+        model = User
+        fields = ('email', 'username',)
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(SIGNUP_ERROR_MESSAGE)
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "Пользователь с такой почтой уже существует.")
+        return value
+
+    validators = [
+        UniqueTogetherValidator(
+            queryset=User.objects.all(),
+            fields=('username', 'email')
+        )
+    ]
+
+
 class TokenSerializer(serializers.Serializer):
     """Сериалазер без модели, для полей username и confirmation_code."""
-    username = serializers.RegexField(regex=USERNAME_REGEX, max_length=150,)
-    confirmation_code = serializers.CharField(max_length=50, required=True)
+    username = serializers.RegexField(
+        regex=USERNAME_REGEX, max_length=settings.USERNAME_LENGTH,)
+    confirmation_code = serializers.CharField(
+        max_length=settings.CONFIRMATION_CODE_LENGTH, required=True)
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(SIGNUP_ERROR_MESSAGE)
+        return value
 
 
 class GenreSerializer(serializers.ModelSerializer):

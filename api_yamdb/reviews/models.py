@@ -1,21 +1,36 @@
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import (MaxValueValidator,
+                                    MinValueValidator,
+                                    RegexValidator
+                                    )
+from django.db import models
+
 from datetime import datetime as dt
 from collections import namedtuple
 
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
 
-ROLES_NAME = namedtuple('ROLES_NAME', 'user moderator admin')
-ROLES = ROLES_NAME('user', 'moderator', 'admin')
+ROLES = namedtuple('ROLES_NAME', 'user moderator admin')(
+    'user', 'moderator', 'admin')
 ROLE_CHOICES = (
     ('user', ROLES.user),
     ('moderator', ROLES.moderator),
     ('admin', ROLES.admin),
 )
 
+username_validator = RegexValidator(
+    r'^(?!me+$)[\w.@+-]+$',
+    'Буквы, цифры либо символы @/./+/-/_, не может быть "me"')
+
 
 class User(AbstractUser):
     """Модель пользователей."""
+    username = models.CharField(
+        'username пользователя',
+        unique=True,
+        max_length=150,
+        blank=False,
+        validators=[username_validator]
+    )
     email = models.EmailField(
         'email пользователя',
         blank=False,
