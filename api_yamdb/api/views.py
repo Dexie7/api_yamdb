@@ -57,8 +57,11 @@ def create_user(request):
                 recipient_list=[user.email or created.email],
                 fail_silently=False,
             )
-        return (Response(serializer.data,
-                         status=status.HTTP_200_OK))
+            return (Response(serializer.data,
+                             status=status.HTTP_200_OK))
+        else:
+            return (Response('Не верный email или username!',
+                             status=status.HTTP_400_BAD_REQUEST))
 
 
 @api_view(['POST'])
