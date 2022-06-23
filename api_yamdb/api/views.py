@@ -2,6 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.db.utils import IntegrityError
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (generics, mixins, permissions, status,
@@ -46,22 +47,27 @@ def create_user(request):
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data['username']
         email = serializer.validated_data['email']
-        user, created = User.objects.get_or_create(username=username,
-                                                   email=email)
-        if user or created:
-            token = default_token_generator.make_token(user or created)
-            send_mail(
-                subject='Ваш код для получения api-токена.',
-                message=f'Код: {token}',
-                from_email=FROM_EMAIL,
-                recipient_list=[user.email or created.email],
-                fail_silently=False,
+        try:
+            user, created = User.objects.get_or_create(username=username,
+                                                       email=email)
+            if user or created:
+                token = default_token_generator.make_token(user or created)
+                send_mail(
+                    subject='Ваш код для получения api-токена.',
+                    message=f'Код: {token}',
+                    from_email=FROM_EMAIL,
+                    recipient_list=[user.email or created.email],
+                    fail_silently=False,
+                )
+                return (Response(serializer.data,
+                                 status=status.HTTP_200_OK))
+        except IntegrityError:
+            return Response(
+                {'Ошибка': 'Не верный username или email',
+                 'Данные': serializer.data
+                 },
+                status=status.HTTP_400_BAD_REQUEST
             )
-            return (Response(serializer.data,
-                             status=status.HTTP_200_OK))
-        else:
-            return (Response('Не верный email или username!',
-                             status=status.HTTP_400_BAD_REQUEST))
 
 
 @api_view(['POST'])

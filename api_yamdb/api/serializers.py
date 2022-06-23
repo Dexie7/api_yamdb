@@ -46,9 +46,13 @@ class RestrictedUserRoleSerializer(UserSerializer):
 class SignupSerializer(UserSerializer):
     """Сериалазер без модели, для полей username и email."""
     email = serializers.EmailField(max_length=EMAIL_LENGTH)
+    username = serializers.CharField(max_length=USERNAME_LENGTH)
 
     class Meta(UserSerializer.Meta):
         fields = ('email', 'username',)
+
+    def validate_email(self, value):
+        return value
 
 
 class TokenSerializer(UserSerializer):
