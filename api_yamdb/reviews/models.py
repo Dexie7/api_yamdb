@@ -1,12 +1,19 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator,
-                                    MinValueValidator,
-                                    RegexValidator
+                                    MinValueValidator
                                     )
 from django.db import models
 
 import datetime as dt
 from collections import namedtuple
+
+from api_yamdb.settings import (EMAIL_LENGTH,
+                                USERNAME_LENGTH,
+                                FIRST_NAME_LENGTH,
+                                LAST_NAME_LENGTH
+                                )
+from .validators import (
+    username_validator, username_validator_regex)
 
 
 ROLES = namedtuple('ROLES_NAME', 'user moderator admin')(
@@ -17,34 +24,29 @@ ROLE_CHOICES = (
     ('admin', ROLES.admin),
 )
 
-username_validator = RegexValidator(
-    r'^(?!me+$)[\w.@+-]+$',
-    'Буквы, цифры либо символы @/./+/-/_, не может быть "me"')
-
 
 class User(AbstractUser):
     """Модель пользователей."""
     username = models.CharField(
-        'username пользователя',
+        'Имя пользователя',
         unique=True,
-        max_length=150,
-        blank=False,
-        validators=[username_validator]
+        max_length=USERNAME_LENGTH,
+        validators=[username_validator, username_validator_regex]
     )
     email = models.EmailField(
-        'email пользователя',
+        'Email пользователя',
         blank=False,
         unique=True,
-        max_length=254,
+        max_length=EMAIL_LENGTH,
     )
     first_name = models.CharField(
-        'first name',
-        max_length=150,
+        'Имя',
+        max_length=FIRST_NAME_LENGTH,
         blank=True
     )
     last_name = models.CharField(
-        'first name',
-        max_length=150,
+        'Фамилия',
+        max_length=LAST_NAME_LENGTH,
         blank=True
     )
     bio = models.TextField(
@@ -71,6 +73,9 @@ class User(AbstractUser):
             self.role == ROLES.admin
             or self.is_staff
         )
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_login}'
 
 
 class BaseCategoryGenre(models.Model):

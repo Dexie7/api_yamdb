@@ -4,12 +4,13 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (generics, mixins, permissions, status, views,
+from rest_framework import (generics, mixins, permissions, status,
                             viewsets)
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.versioning import URLPathVersioning
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import api_view, permission_classes
 
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -35,44 +36,40 @@ class FirstVersioning(URLPathVersioning):
     allowed_versions = 'v1'
 
 
-class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_user(request):
     """View для регистрации и создания пользователя
     с последующей отсылкой confirmation code на email этого пользователя."""
-
-    permission_classes = (permissions.AllowAny,)
-    queryset = User.objects.all()
-    serializer_class = SignupSerializer
-
-    def create(self, request, *args, **kwargs):
+    if request.method == 'POST':
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data,
-                        status=status.HTTP_200_OK,
-                        headers=headers)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user, created = User.objects.get_or_create(username=username,
+                                                   email=email)
+        if user or created:
+            token = default_token_generator.make_token(user or created)
+            send_mail(
+                subject='Ваш код для получения api-токена.',
+                message=f'Код: {token}',
+                from_email=FROM_EMAIL,
+                recipient_list=[user.email or created.email],
+                fail_silently=False,
+            )
+        return (Response(serializer.data,
+                         status=status.HTTP_200_OK))
 
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        token = default_token_generator.make_token(instance)
-        send_mail(
-            subject='Ваш код для получения api-токена.',
-            message=f'Код: {token}',
-            from_email=FROM_EMAIL,
-            recipient_list=[instance.email],
-            fail_silently=False,
-        )
 
-
-class CreateToken(views.APIView):
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_token(request):
     """Создание токена."""
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
+    if request.method == 'POST':
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        confirmation_code = serializer.validated_data['confirmation_code']
         username = serializer.validated_data['username']
+        confirmation_code = serializer.validated_data['confirmation_code']
         user = get_object_or_404(User, username=username)
         if default_token_generator.check_token(
             user,
@@ -84,7 +81,7 @@ class CreateToken(views.APIView):
                 status=status.HTTP_200_OK
             )
         return Response(
-            "Confirm code invalid",
+            "Не верный код подтверждения",
             status=status.HTTP_400_BAD_REQUEST
         )
 
