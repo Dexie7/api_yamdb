@@ -150,8 +150,12 @@ class BaseReviewComment(models.Model):
         verbose_name='Дата',
     )
 
+    def __str__(self):
+        return self.text
+
     class Meta:
         abstract = True
+        ordering = ['-pub_date']
 
 
 class Review(BaseReviewComment):
@@ -159,7 +163,7 @@ class Review(BaseReviewComment):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews')
+    )
     score = models.PositiveSmallIntegerField(
         validators=[
             MaxValueValidator(10),
@@ -169,8 +173,7 @@ class Review(BaseReviewComment):
     )
 
     class Meta:
-        default_related_name = '%(app_label)s_%(class)ss'
-        ordering = ['-pub_date']
+        default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -186,11 +189,9 @@ class Comment(BaseReviewComment):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='reviews'
     )
 
     class Meta:
-        ordering = ['-pub_date']
-        default_related_name = '%(app_label)s_%(class)ss'
+        default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
