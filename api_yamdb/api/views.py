@@ -166,7 +166,7 @@ class BaseReviewCommentView(viewsets.ModelViewSet):
     serializer_class = None
 
     versioning_class = FirstVersioning
-    permission_classes = (ReadOnlyOrIsAdminOrModeratorOrAuthor,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, ReadOnlyOrIsAdminOrModeratorOrAuthor,)
 
 
 class ReviewViewSet(BaseReviewCommentView):
@@ -177,7 +177,7 @@ class ReviewViewSet(BaseReviewCommentView):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        return self.get_title().reviews.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
@@ -192,7 +192,7 @@ class CommentViewSet(BaseReviewCommentView):
         return get_object_or_404(Review, id=self.kwargs.get("reviews"))
 
     def get_queryset(self):
-        return self.get_review().reviews.all()
+        return self.get_review().comments.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
