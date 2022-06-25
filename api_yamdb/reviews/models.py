@@ -4,7 +4,6 @@ from django.core.validators import (MaxValueValidator,
                                     )
 from django.db import models
 
-import datetime as dt
 from collections import namedtuple
 
 from api_yamdb.settings import (EMAIL_LENGTH,
@@ -95,6 +94,9 @@ class BaseCategoryGenre(models.Model):
         abstract = True
         ordering = ['name']
 
+    def __str__(self):
+        return self.name
+
 
 class Category(BaseCategoryGenre):
     """Категории произведений."""
@@ -114,16 +116,8 @@ class Genre(BaseCategoryGenre):
 
 class Title(models.Model):
     """Произведения, к которым пишут отзывы (Review)."""
-    name = models.CharField(
-        max_length=200,
-        verbose_name='Произведение'
-    )
-    year = models.IntegerField(
-        validators=[
-            MaxValueValidator(dt.date.today().year)
-        ],
-        verbose_name='год создания произведения'
-    )
+    name = models.TextField()
+    year = models.IntegerField(verbose_name="Год")
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',

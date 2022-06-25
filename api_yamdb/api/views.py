@@ -118,9 +118,11 @@ class MeAPIView(generics.RetrieveUpdateAPIView):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Viewset для модели  Title."""
-    versioning_class = FirstVersioning
     queryset = Title.objects.all().annotate(
         rating=Avg("reviews__score")).order_by('category')
+    # если убирать от сюда сортировку, то пишет ошибку:
+    # QuerySet won't use Meta.ordering in Django 3.1
+    versioning_class = FirstVersioning
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitlesFilter
@@ -166,7 +168,10 @@ class BaseReviewCommentView(viewsets.ModelViewSet):
     serializer_class = None
 
     versioning_class = FirstVersioning
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, ReadOnlyOrIsAdminOrModeratorOrAuthor,)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        ReadOnlyOrIsAdminOrModeratorOrAuthor,
+    )
 
 
 class ReviewViewSet(BaseReviewCommentView):
