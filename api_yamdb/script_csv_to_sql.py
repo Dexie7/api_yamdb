@@ -79,4 +79,4 @@ if __name__ == '__main__':
         table_name='reviews_title_genre',
         table_path='db.sqlite3',
         csv_path='static/data/genre_title.csv',
-     )
+    )
