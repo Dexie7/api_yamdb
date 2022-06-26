@@ -152,13 +152,13 @@ class BaseCategoryGenreView(
 
 class CategoryViewSet(BaseCategoryGenreView):
     """Viewset для модели  Category."""
-    queryset = Category.objects.all().order_by('name')
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(BaseCategoryGenreView):
     """Viewset для модели  Genre."""
-    queryset = Genre.objects.all().order_by('name')
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
