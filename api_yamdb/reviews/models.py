@@ -12,7 +12,7 @@ from api_yamdb.settings import (EMAIL_LENGTH,
                                 LAST_NAME_LENGTH
                                 )
 from .validators import (
-    username_validator, username_validator_regex, year_validator)
+    username_validator, year_validator)
 
 
 ROLES = namedtuple('ROLES_NAME', 'user moderator admin')(
@@ -30,7 +30,7 @@ class User(AbstractUser):
         'Имя пользователя',
         unique=True,
         max_length=USERNAME_LENGTH,
-        validators=[username_validator, username_validator_regex]
+        validators=[username_validator]
     )
     email = models.EmailField(
         'Email пользователя',

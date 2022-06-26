@@ -13,7 +13,7 @@ from reviews.models import (
     User
 )
 from reviews.validators import (
-    username_validator, email_validator, username_validator_regex)
+    username_validator)
 
 
 REVIEW_ERROR_MESSAGE = "Уже есть ревью на это произведение."
@@ -29,11 +29,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         username_validator(value)
-        username_validator_regex(value=value)
-        return value
-
-    def validate_email(self, value):
-        email_validator(value)
         return value
 
 
@@ -43,26 +38,19 @@ class RestrictedUserRoleSerializer(UserSerializer):
         read_only_fields = ('role',)
 
 
-class SignupSerializer(UserSerializer):
+class SignupSerializer(serializers.Serializer):
     """Сериалазер без модели, для полей username и email."""
     email = serializers.EmailField(max_length=EMAIL_LENGTH)
-    username = serializers.CharField(max_length=USERNAME_LENGTH)
-
-    class Meta(UserSerializer.Meta):
-        fields = ('email', 'username',)
-
-    def validate_email(self, value):
-        return value
+    username = serializers.CharField(
+        validators=[username_validator], max_length=USERNAME_LENGTH)
 
 
-class TokenSerializer(UserSerializer):
+class TokenSerializer(serializers.Serializer):
     """Сериалазер без модели, для полей username и confirmation_code."""
-    username = serializers.CharField(max_length=USERNAME_LENGTH,)
+    username = serializers.CharField(
+        validators=[username_validator], max_length=USERNAME_LENGTH,)
     confirmation_code = serializers.CharField(
         max_length=CONFIRMATION_CODE_LENGTH, required=True)
-
-    class Meta(UserSerializer.Meta):
-        fields = ('username', 'confirmation_code',)
 
 
 class GenreSerializer(serializers.ModelSerializer):

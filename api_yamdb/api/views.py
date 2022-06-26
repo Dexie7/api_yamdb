@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (generics, mixins, permissions, status,
-                            viewsets)
+                            viewsets, filters)
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.versioning import URLPathVersioning
@@ -42,57 +42,54 @@ class FirstVersioning(URLPathVersioning):
 def create_user(request):
     """View для регистрации и создания пользователя
     с последующей отсылкой confirmation code на email этого пользователя."""
-    if request.method == 'POST':
-        serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        try:
-            user, created = User.objects.get_or_create(username=username,
-                                                       email=email)
-            if user or created:
-                token = default_token_generator.make_token(user or created)
-                send_mail(
-                    subject='Ваш код для получения api-токена.',
-                    message=f'Код: {token}',
-                    from_email=FROM_EMAIL,
-                    recipient_list=[user.email or created.email],
-                    fail_silently=False,
-                )
-                return (Response(serializer.data,
-                                 status=status.HTTP_200_OK))
-        except IntegrityError:
-            return Response(
-                {'Ошибка': 'Не верный username или email',
-                 'Данные': serializer.data
-                 },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    serializer = SignupSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+    try:
+        user, created = User.objects.get_or_create(username=username,
+                                                   email=email)
+    except IntegrityError:
+        return Response(
+            {'Ошибка': 'Не верный username или email',
+                'Данные': serializer.data
+             },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    token = default_token_generator.make_token(user)
+    send_mail(
+        subject='Ваш код для получения api-токена.',
+        message=f'Код: {token}',
+        from_email=FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
+    return (Response(serializer.data,
+                     status=status.HTTP_200_OK))
 
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def create_token(request):
     """Создание токена."""
-    if request.method == 'POST':
-        serializer = TokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        confirmation_code = serializer.validated_data['confirmation_code']
-        user = get_object_or_404(User, username=username)
-        if default_token_generator.check_token(
-            user,
-            confirmation_code
-        ):
-            token = AccessToken.for_user(user)
-            return Response(
-                {"token": f"{token}"},
-                status=status.HTTP_200_OK
-            )
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+    user = get_object_or_404(User, username=username)
+    if default_token_generator.check_token(
+        user,
+        confirmation_code
+    ):
+        token = AccessToken.for_user(user)
         return Response(
-            "Не верный код подтверждения",
-            status=status.HTTP_400_BAD_REQUEST
+            {"token": f"{token}"},
+            status=status.HTTP_200_OK
         )
+    return Response(
+        "Не верный код подтверждения",
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -118,14 +115,12 @@ class MeAPIView(generics.RetrieveUpdateAPIView):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Viewset для модели  Title."""
-    queryset = Title.objects.all().annotate(
-        rating=Avg("reviews__score")).order_by('category')
-    # если убирать от сюда сортировку, то пишет ошибку:
-    # QuerySet won't use Meta.ordering in Django 3.1
+    queryset = Title.objects.all().annotate(rating=Avg("reviews__score"))
     versioning_class = FirstVersioning
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitlesFilter
+    ordering = ('category',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
