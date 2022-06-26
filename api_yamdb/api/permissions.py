@@ -18,6 +18,7 @@ class ReadOnlyOrIsAdminOrModeratorOrAuthor(permissions.BasePermission):
                 request.user.is_moderator()
                 or request.user.is_admin()
                 or request.user == obj.author
+                or request.method in permissions.SAFE_METHODS
             )
         return request.method in permissions.SAFE_METHODS
 
