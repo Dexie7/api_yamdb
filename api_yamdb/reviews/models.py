@@ -12,7 +12,7 @@ from api_yamdb.settings import (EMAIL_LENGTH,
                                 LAST_NAME_LENGTH
                                 )
 from .validators import (
-    username_validator, username_validator_regex)
+    username_validator, username_validator_regex, year_validator)
 
 
 ROLES = namedtuple('ROLES_NAME', 'user moderator admin')(
@@ -117,7 +117,8 @@ class Genre(BaseCategoryGenre):
 class Title(models.Model):
     """Произведения, к которым пишут отзывы (Review)."""
     name = models.TextField()
-    year = models.IntegerField(verbose_name="Год")
+    year = models.IntegerField(verbose_name="Год",
+                               validators=[year_validator],)
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
