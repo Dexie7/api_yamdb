@@ -162,7 +162,7 @@ class GenreViewSet(BaseCategoryGenreView):
     serializer_class = GenreSerializer
 
 
-class BaseReviewCommentView(viewsets.ModelViewSet):
+class BaseReviewCommentViewSet(viewsets.ModelViewSet):
     """Базовый класс ревью и комментариев."""
     queryset = None
     serializer_class = None
@@ -174,7 +174,7 @@ class BaseReviewCommentView(viewsets.ModelViewSet):
     )
 
 
-class ReviewViewSet(BaseReviewCommentView):
+class ReviewViewSet(BaseReviewCommentViewSet):
     """Viewset для модели  Review."""
     serializer_class = ReviewSerializer
 
@@ -182,22 +182,22 @@ class ReviewViewSet(BaseReviewCommentView):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        return self.get_title().reviews.all().order_by('-pub_date')
+        return self.get_title().reviews.all()#.order_by('-pub_date')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentViewSet(BaseReviewCommentView):
+class CommentViewSet(BaseReviewCommentViewSet):
     """Viewset для модели  Comment."""
     versioning_class = FirstVersioning
     serializer_class = CommentSerializer
 
     def get_review(self):
-        return get_object_or_404(Review, id=self.kwargs.get("reviews"))
+        return get_object_or_404(Review, id=self.kwargs.get('reviews'))
 
     def get_queryset(self):
-        return self.get_review().comments.all().order_by('-pub_date')
+        return self.get_review().comments.all()#.order_by('-pub_date')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
