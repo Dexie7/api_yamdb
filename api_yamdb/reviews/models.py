@@ -128,9 +128,10 @@ class Title(models.Model):
         Category,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='titles'
+        related_name='titles',
+        db_column = 'category'
     )
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(verbose_name='Описание', blank=True)
 
     class Meta:
         ordering = ['name']
@@ -143,6 +144,7 @@ class BaseReviewComment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        db_column = 'author',
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
