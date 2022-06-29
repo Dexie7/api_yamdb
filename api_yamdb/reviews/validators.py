@@ -21,6 +21,6 @@ def username_validator(value):
 def year_validator(value):
     if value > timezone.now().year:
         raise ValidationError(
-            ('%(value)s год не должен быть больше нынешнего!'),
+            (f'{value} год не должен быть больше нынешнего!'),
             params={'value': value},
         )
