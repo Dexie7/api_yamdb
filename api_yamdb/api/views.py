@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from rest_framework.versioning import URLPathVersioning
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import api_view, permission_classes
-from datetime import datetime
 
 from reviews.models import Category, Genre, Review, Title, User
 
@@ -56,9 +55,9 @@ def create_user(request):
              },
             status=status.HTTP_400_BAD_REQUEST
         )
-    timestamp = (int(round(datetime.now().timestamp())))
-    token = default_token_generator._make_token_with_timestamp(
-        user, timestamp)
+
+    token = default_token_generator.make_token(
+        user)
     send_mail(
         subject='Ваш код для получения api-токена.',
         message=f'Код: {token}',
@@ -70,8 +69,8 @@ def create_user(request):
                      status=status.HTTP_200_OK))
 
 
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@ api_view(['POST'])
+@ permission_classes([permissions.AllowAny])
 def create_token(request):
     """Создание токена."""
     serializer = TokenSerializer(data=request.data)
@@ -89,9 +88,6 @@ def create_token(request):
             status=status.HTTP_200_OK
         )
 
-    timestamp = (int(round(datetime.now().timestamp())))
-    token = default_token_generator._make_token_with_timestamp(
-        user, timestamp)
     return Response(
         ('Не верный код подтверждения,'
          'для получения ключа,'
