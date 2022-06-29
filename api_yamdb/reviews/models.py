@@ -159,12 +159,12 @@ class BaseReviewComment(models.Model):
         verbose_name='Дата',
     )
 
-    def __str__(self):
-        return self.text
-
     class Meta:
         abstract = True
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.pub_date, self.author, self.text[:15]
 
 
 class Review(BaseReviewComment):
@@ -181,7 +181,7 @@ class Review(BaseReviewComment):
         verbose_name='Рейтинг произведения'
     )
 
-    class Meta:
+    class Meta(BaseReviewComment.Meta):
         default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
@@ -200,7 +200,7 @@ class Comment(BaseReviewComment):
         on_delete=models.CASCADE,
     )
 
-    class Meta:
+    class Meta(BaseReviewComment.Meta):
         default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
