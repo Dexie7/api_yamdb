@@ -1,5 +1,6 @@
 import csv
 import sqlite3
+import datetime
 
 
 def import_csv_to_sql(table_name: str,
@@ -14,6 +15,9 @@ def import_csv_to_sql(table_name: str,
         sql_headers = ', '.join(csv_headers)
         sql_values = ['?' for i in range(len(csv_headers))]
         sql_values = ', '.join(sql_values)
+        if table_name == 'reviews_user':
+            sql_headers += ', is_superuser, is_staff, is_active, date_joined'
+            sql_values += f', False, False, True, "{datetime.datetime.now()}"'
         insert_records = (f"INSERT INTO {table_name}"
                           f"({sql_headers}) VALUES({sql_values})")
 

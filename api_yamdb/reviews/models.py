@@ -9,7 +9,8 @@ from collections import namedtuple
 from api_yamdb.settings import (EMAIL_LENGTH,
                                 USERNAME_LENGTH,
                                 FIRST_NAME_LENGTH,
-                                LAST_NAME_LENGTH
+                                LAST_NAME_LENGTH,
+                                PASSWORD_LENGTH
                                 )
 from .validators import (
     username_validator, year_validator)
@@ -58,6 +59,11 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default=ROLES.user,
     )
+    password = models.CharField(
+        max_length=PASSWORD_LENGTH,
+        blank=True,
+        default='',
+        null=True)
 
     class Meta:
         ordering = ['username']
@@ -122,16 +128,17 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
-        verbose_name='Жанр произведения'
+        verbose_name='Жанр произведения',
     )
     category = models.ForeignKey(
         Category,
         null=True,
         on_delete=models.SET_NULL,
         related_name='titles',
-        db_column = 'category'
+        db_column='category'
     )
-    description = models.TextField(verbose_name='Описание', blank=True)
+    description = models.TextField(
+        verbose_name='Описание', blank=True, null=True)
 
     class Meta:
         ordering = ['name']
@@ -144,7 +151,7 @@ class BaseReviewComment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        db_column = 'author',
+        db_column='author'
     )
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
