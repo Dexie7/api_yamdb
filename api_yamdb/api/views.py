@@ -14,7 +14,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import api_view, permission_classes
 from datetime import datetime
 
-
 from reviews.models import Category, Genre, Review, Title, User
 
 from .filter import TitlesFilter
@@ -30,8 +29,6 @@ from .serializers import (
     RestrictedUserRoleSerializer, UserSerializer
 )
 from api_yamdb.settings import FROM_EMAIL
-
-TIMESTAMP_FOR_CODE: list = []
 
 
 class FirstVersioning(URLPathVersioning):
@@ -59,9 +56,9 @@ def create_user(request):
              },
             status=status.HTTP_400_BAD_REQUEST
         )
-    TIMESTAMP_FOR_CODE.append(int(round(datetime.now().timestamp())))
+    timestamp = (int(round(datetime.now().timestamp())))
     token = default_token_generator._make_token_with_timestamp(
-        user, TIMESTAMP_FOR_CODE[0])
+        user, timestamp)
     send_mail(
         subject='Ваш код для получения api-токена.',
         message=f'Код: {token}',
@@ -87,15 +84,18 @@ def create_token(request):
         confirmation_code
     ):
         token = AccessToken.for_user(user)
-        TIMESTAMP_FOR_CODE.clear()
         return Response(
             {"token": f"{token}"},
             status=status.HTTP_200_OK
         )
-    TIMESTAMP_FOR_CODE.clear()
+
+    timestamp = (int(round(datetime.now().timestamp())))
+    token = default_token_generator._make_token_with_timestamp(
+        user, timestamp)
     return Response(
         ('Не верный код подтверждения,'
-         'для получения ключа, запросите его заново!'),
+         'для получения ключа,'
+         ' сформируйте новый код и запросите ключ заново!'),
         status=status.HTTP_400_BAD_REQUEST
     )
 
