@@ -62,8 +62,8 @@ class User(AbstractUser):
     password = models.CharField(
         max_length=PASSWORD_LENGTH,
         blank=True,
-        default='',
-        null=True)
+        default=''
+    )
 
     class Meta:
         ordering = ['username']
