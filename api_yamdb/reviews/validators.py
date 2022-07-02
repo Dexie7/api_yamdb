@@ -22,5 +22,4 @@ def year_validator(value):
     if value > timezone.now().year:
         raise ValidationError(
             (f'{value} год не должен быть больше нынешнего!'),
-            params={'value': value},
         )
