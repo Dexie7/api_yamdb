@@ -55,7 +55,6 @@ def create_user(request):
              },
             status=status.HTTP_400_BAD_REQUEST
         )
-
     token = default_token_generator.make_token(
         user)
     send_mail(
@@ -69,8 +68,8 @@ def create_user(request):
                      status=status.HTTP_200_OK))
 
 
-@ api_view(['POST'])
-@ permission_classes([permissions.AllowAny])
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def create_token(request):
     """Создание токена."""
     serializer = TokenSerializer(data=request.data)
@@ -87,9 +86,8 @@ def create_token(request):
             {"token": f"{token}"},
             status=status.HTTP_200_OK
         )
-
     return Response(
-        'Не верный код подтверждения!',
+        'Не верный код подтверждения',
         status=status.HTTP_400_BAD_REQUEST
     )
 
