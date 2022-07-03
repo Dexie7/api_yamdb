@@ -164,7 +164,7 @@ class BaseReviewComment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.pub_date, self.author, self.text[:15]
+        return f'{self.pub_date} | {self.author} | {self.text[:15]}'
 
 
 class Review(BaseReviewComment):
