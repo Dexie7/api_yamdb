@@ -118,9 +118,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(rating=Avg("reviews__score"))
     versioning_class = FirstVersioning
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitlesFilter
-    search_fields = ('category',)
+    ordering_fields = ('category', 'genre', 'name', 'year',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
